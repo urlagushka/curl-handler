@@ -2,27 +2,21 @@
 #define CURL_HANDLER_HPP
 
 #include <string>
-#include <vector>
 #include <utility>
 #include <format>
 #include <future>
 #include <thread>
 #include <memory>
-#include <iostream>
 #include <stack>
-#include <curl/curl.h>
 
+#include <curl/curl.h>
 #include "json.hpp"
 
 namespace
 {
-  static std::size_t on_write(char * ptr, std::size_t size, std::size_t nmemb, std::string * userdata)
+  static std::size_t default_on_write(char * ptr, std::size_t size, std::size_t nmemb, std::string & userdata)
   {
-    if (userdata == nullptr)
-    {
-      return 0;
-    }
-    userdata->append(ptr, size * nmemb);
+    userdata.append(ptr, size * nmemb);
     return size * nmemb;
   }
 }
@@ -36,12 +30,13 @@ concept correct_answer_t = requires(answer_t answer, const std::string & rhs)
 namespace curl
 {
   using url_t = std::string;
-  using query_t = std::vector< std::pair< std::string, std::string > >;
+  using query_t = nlohmann::json;
+  using on_write_sign = std::size_t (*)(char * , std::size_t, std::size_t, std::string &);
 
   class curl_handler
   {
     public:
-      curl_handler(const std::string & user_agent);
+      curl_handler(const std::string & user_agent, on_write_sign on_write = default_on_write);
       curl_handler(const curl_handler & rhs) = delete;
       curl_handler(curl_handler && rhs);
       curl_handler & operator=(const curl_handler & rhs) = delete;
@@ -49,10 +44,10 @@ namespace curl
       ~curl_handler();
 
       template < correct_answer_t answer_t >
-      answer_t post(const url_t & url, const nlohmann::json & query);
+      answer_t post(const url_t & url, const query_t & query);
 
       template < correct_answer_t answer_t >
-      std::future< answer_t > async_post(const url_t & url, const nlohmann::json & query);
+      std::future< answer_t > async_post(const url_t & url, const query_t & query);
 
       template < correct_answer_t answer_t >
       answer_t get(const url_t & url);
@@ -67,12 +62,13 @@ namespace curl
 
       CURL * __curl;
       std::string __user_agent;
+      on_write_sign __on_write;
   };
 }
 
 template < correct_answer_t answer_t >
 answer_t
-curl::curl_handler::post(const url_t & url, const nlohmann::json & query)
+curl::curl_handler::post(const url_t & url, const query_t & query)
 {
   if (__curl == nullptr)
   {
@@ -88,7 +84,7 @@ curl::curl_handler::post(const url_t & url, const nlohmann::json & query)
   curl_easy_setopt(__curl, CURLOPT_POSTFIELDS, tmp.c_str());
   curl_easy_setopt(__curl, CURLOPT_POSTFIELDSIZE, static_cast< long >(tmp.size()));
 
-  curl_easy_setopt(__curl, CURLOPT_WRITEFUNCTION, on_write);
+  curl_easy_setopt(__curl, CURLOPT_WRITEFUNCTION, __on_write);
   curl_easy_setopt(__curl, CURLOPT_WRITEDATA, &response);
 
   curl_slist * headers = nullptr;
@@ -109,23 +105,9 @@ curl::curl_handler::post(const url_t & url, const nlohmann::json & query)
 
 template < correct_answer_t answer_t >
 std::future< answer_t >
-curl::curl_handler::async_post(const url_t & url, const nlohmann::json & query)
+curl::curl_handler::async_post(const url_t & url, const query_t & query)
 {
-  std::promise< answer_t > promise;
-  std::future< answer_t > future = promise.get_future();
-
-  std::thread([promise = std::move(promise), this, url, query]() mutable {
-    try
-    {
-      promise.set_value(post< answer_t >(url, query));
-    }
-    catch (const std::runtime_error & error)
-    {
-      promise.set_exception(std::make_exception_ptr(error));
-    }
-  }).detach();
-
-  return future;
+  return std::async(std::launch::async, &curl_handler::post< answer_t >, std::cref(url), std::cref(query));
 }
 
 template < correct_answer_t answer_t >
@@ -142,7 +124,7 @@ curl::curl_handler::get(const url_t & url)
   curl_easy_setopt(__curl, CURLOPT_URL, url.c_str());
   curl_easy_setopt(__curl, CURLOPT_HTTPGET, 1L);
 
-  curl_easy_setopt(__curl, CURLOPT_WRITEFUNCTION, on_write);
+  curl_easy_setopt(__curl, CURLOPT_WRITEFUNCTION, __on_write);
   curl_easy_setopt(__curl, CURLOPT_WRITEDATA, &response);
 
   curl_slist * headers = nullptr;
@@ -165,21 +147,7 @@ template < correct_answer_t answer_t >
 std::future< answer_t >
 curl::curl_handler::async_get(const url_t & url)
 {
-  std::promise< answer_t > promise;
-  std::future< answer_t > future = promise.get_future();
-
-  std::thread([promise = std::move(promise), this, url]() mutable {
-    try
-    {
-      promise.set_value(get< answer_t >(url));
-    }
-    catch (const std::runtime_error & error)
-    {
-      promise.set_exception(std::make_exception_ptr(error));
-    }
-  }).detach();
-
-  return future;
+  return std::async(std::launch::async, &curl_handler::get< answer_t >, std::cref(url));
 }
 
 template < correct_answer_t answer_t >
