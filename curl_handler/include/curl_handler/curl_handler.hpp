@@ -9,6 +9,7 @@
 #include <thread>
 #include <memory>
 #include <iostream>
+#include <stack>
 #include <curl/curl.h>
 
 #include "json.hpp"
@@ -60,6 +61,7 @@ namespace curl
       std::future< answer_t > async_get(const url_t & url);
 
     private:
+      std::stack< std::jthread > __thread_stack;
       template < correct_answer_t answer_t >
       answer_t string_to_answer(const std::string & rhs);
 
