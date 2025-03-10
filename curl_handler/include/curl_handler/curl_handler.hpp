@@ -14,7 +14,8 @@
 
 namespace
 {
-  static std::size_t default_on_write(char * ptr, std::size_t size, std::size_t nmemb, std::string & userdata)
+  static std::size_t
+  default_on_write(char * ptr, std::size_t size, std::size_t nmemb, std::string & userdata)
   {
     userdata.append(ptr, size * nmemb);
     return size * nmemb;
