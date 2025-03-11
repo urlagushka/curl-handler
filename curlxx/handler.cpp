@@ -1,11 +1,14 @@
-#include <curl_handler/curl_handler.hpp>
+#include <curlxx/handler.hpp>
 
-curl::curl_handler::curl_handler(const std::string & user_agent, on_write_sign on_write):
+curlxx::handler::handler(const std::string & user_agent, on_write_sign on_write):
   __user_agent(user_agent),
   __on_write(on_write),
   __is_debug(false)
-{}
+{
+  curl_global_init(CURL_GLOBAL_DEFAULT);
+}
 
+/*
 curl::curl_handler::curl_handler(curl_handler && rhs):
   __user_agent(std::move(rhs.__user_agent)),
   __on_write(rhs.__on_write),
@@ -26,13 +29,14 @@ curl::curl_handler::operator=(curl_handler && rhs)
 
   return * this;
 }
+*/
 
-curl::curl_handler::~curl_handler()
+curlxx::handler::~handler()
 {
   curl_global_cleanup();
 }
 
-void curl::curl_handler::set_debug_state(bool rhs)
+void curlxx::handler::set_debug_state(bool rhs)
 {
   __is_debug = rhs;
 }

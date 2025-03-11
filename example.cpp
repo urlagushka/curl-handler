@@ -1,13 +1,13 @@
 #include <iostream>
 
-#include <curl_handler/curl_handler.hpp>
-#include <curl_handler/json.hpp>
+#include <curlxx/handler.hpp>
+#include <curlxx/json.hpp>
 
 int main(int argc, char ** argv)
 {
   try
   {
-    curl::curl_handler qq("firefox");
+    curlxx::handler qq("firefox");
     // qq.set_debug_state(true);
 
     // GET REQUEST
