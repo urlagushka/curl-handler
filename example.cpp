@@ -24,13 +24,13 @@ int main(int argc, char ** argv)
 
     // POST REQUEST
     {
-      auto answer = qq.post< nlohmann::json >("'https://dummyjson.com/posts'", {});
+      auto answer = qq.post< nlohmann::json >("https://httpbin.org/post", {"post", "test"});
       std::cout << answer.dump(2) << std::endl;
     }
 
     // ASYNC POST REQUEST
     {
-      auto answer = qq.async_post< nlohmann::json >("'https://dummyjson.com/posts'", {});
+      auto answer = qq.async_post< nlohmann::json >("https://httpbin.org/post", {"async", "post", "test"});
       std::cout << answer.get().dump(2) << std::endl;
     }
   }

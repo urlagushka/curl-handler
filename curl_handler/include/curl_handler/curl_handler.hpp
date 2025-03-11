@@ -6,8 +6,6 @@
 #include <format>
 #include <future>
 #include <thread>
-#include <memory>
-#include <iostream>
 #include <string_view>
 
 #include <curl/curl.h>
@@ -85,7 +83,6 @@ curl::curl_handler::post(url_t url, const query_t & query)
 
   std::string response;
   std::string tmp = query.dump();
-  std::cout << tmp << std::endl;
 
   if (__is_debug)
   {
@@ -109,9 +106,9 @@ curl::curl_handler::post(url_t url, const query_t & query)
   curl_slist_free_all(headers);
   if (code != CURLE_OK)
   {
-    throw std::runtime_error(std::format("POST {}\n{}", url, curl_easy_strerror(code)));
+    throw std::runtime_error(std::format("POST {} ERROR\n{}", url, curl_easy_strerror(code)));
   }
-  std::cout << response << std::endl;
+  
   return string_to_answer< answer_t >(response);
 }
 
@@ -119,7 +116,7 @@ template < correct_answer_t answer_t >
 std::future< answer_t >
 curl::curl_handler::async_post(url_t url, const query_t & query)
 {
-  return std::async(std::launch::async, &curl_handler::post< answer_t >, this, url, std::cref(query));
+  return std::async(std::launch::async, &curl_handler::post< answer_t >, this, url, query);
 }
 
 template < correct_answer_t answer_t >
@@ -156,7 +153,7 @@ curl::curl_handler::get(url_t url)
   curl_slist_free_all(headers);
   if (code != CURLE_OK)
   {
-    throw std::runtime_error(std::format("GET {}\n{}", url, curl_easy_strerror(code)));
+    throw std::runtime_error(std::format("GET {} ERROR\n{}", url, curl_easy_strerror(code)));
   }
 
   return string_to_answer< answer_t >(response);
@@ -173,6 +170,7 @@ template < correct_answer_t answer_t >
 answer_t
 curl::curl_handler::string_to_answer(const std::string & rhs)
 {
+  // need rework func
   answer_t answer = nlohmann::json::parse(rhs);
   return answer;
 }
