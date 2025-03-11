@@ -1,7 +1,7 @@
 # curl-handler
 ## NOT READY | NEED TEST | MEMORY LEAKS
 async curl handler for cpp 20
-now works only with application/json - need rework
+#### now works only with application/json - need rework
 
 ## Supported methods
 #### Get
