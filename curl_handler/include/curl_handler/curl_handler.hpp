@@ -61,7 +61,6 @@ namespace curl
       template < correct_answer_t answer_t >
       answer_t string_to_answer(const std::string & rhs);
 
-      CURL * __curl;
       std::string __user_agent;
       on_write_sign __on_write;
       bool __is_debug;
@@ -72,13 +71,15 @@ template < correct_answer_t answer_t >
 answer_t
 curl::curl_handler::post(url_t url, const query_t & query)
 {
-  if (__curl == nullptr)
-  {
-    throw std::runtime_error("curl is null!");
-  }
   if (url.empty())
   {
     throw std::runtime_error("url is null!");
+  }
+
+  CURL * curl = curl_easy_init();
+  if (curl == nullptr)
+  {
+    throw std::runtime_error("curl init failed!");
   }
 
   std::string response;
@@ -86,29 +87,30 @@ curl::curl_handler::post(url_t url, const query_t & query)
 
   if (__is_debug)
   {
-    curl_easy_setopt(__curl, CURLOPT_VERBOSE, 1L);
+    curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
   }
-  curl_easy_setopt(__curl, CURLOPT_URL, url.data());
-  curl_easy_setopt(__curl, CURLOPT_POST, 1L);
-  curl_easy_setopt(__curl, CURLOPT_POSTFIELDS, tmp.c_str());
-  curl_easy_setopt(__curl, CURLOPT_POSTFIELDSIZE, static_cast< long >(tmp.size()));
+  curl_easy_setopt(curl, CURLOPT_URL, url.data());
+  curl_easy_setopt(curl, CURLOPT_POST, 1L);
+  curl_easy_setopt(curl, CURLOPT_POSTFIELDS, tmp.c_str());
+  curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, static_cast< long >(tmp.size()));
 
-  curl_easy_setopt(__curl, CURLOPT_WRITEFUNCTION, __on_write);
-  curl_easy_setopt(__curl, CURLOPT_WRITEDATA, &response);
+  curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, __on_write);
+  curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
 
   curl_slist * headers = nullptr;
   headers = curl_slist_append(headers, "Content-Type: application/json");
   headers = curl_slist_append(headers, std::format("User-Agent: {}", __user_agent).c_str());
-  curl_easy_setopt(__curl, CURLOPT_HTTPHEADER, headers);
+  curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 
-  CURLcode code = curl_easy_perform(__curl);
+  CURLcode code = curl_easy_perform(curl);
 
   curl_slist_free_all(headers);
+  curl_easy_cleanup(curl);
   if (code != CURLE_OK)
   {
     throw std::runtime_error(std::format("POST {} ERROR\n{}", url, curl_easy_strerror(code)));
   }
-  
+
   return string_to_answer< answer_t >(response);
 }
 
@@ -123,34 +125,37 @@ template < correct_answer_t answer_t >
 answer_t
 curl::curl_handler::get(url_t url)
 {
-  if (__curl == nullptr)
-  {
-    throw std::runtime_error("curl is null!");
-  }
   if (url.empty())
   {
     throw std::runtime_error("url is null!");
+  }
+
+  CURL * curl = curl_easy_init();
+  if (curl == nullptr)
+  {
+    throw std::runtime_error("curl init failed!");
   }
 
   std::string response;
 
   if (__is_debug)
   {
-    curl_easy_setopt(__curl, CURLOPT_VERBOSE, 1L);
+    curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
   }
-  curl_easy_setopt(__curl, CURLOPT_URL, url.data());
-  curl_easy_setopt(__curl, CURLOPT_HTTPGET, 1L);
+  curl_easy_setopt(curl, CURLOPT_URL, url.data());
+  curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
 
-  curl_easy_setopt(__curl, CURLOPT_WRITEFUNCTION, __on_write);
-  curl_easy_setopt(__curl, CURLOPT_WRITEDATA, &response);
+  curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, __on_write);
+  curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
 
   curl_slist * headers = nullptr;
   headers = curl_slist_append(headers, std::format("User-Agent: {}", __user_agent).c_str());
-  curl_easy_setopt(__curl, CURLOPT_HTTPHEADER, headers);
+  curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 
-  CURLcode code = curl_easy_perform(__curl);
+  CURLcode code = curl_easy_perform(curl);
 
   curl_slist_free_all(headers);
+  curl_easy_cleanup(curl);
   if (code != CURLE_OK)
   {
     throw std::runtime_error(std::format("GET {} ERROR\n{}", url, curl_easy_strerror(code)));

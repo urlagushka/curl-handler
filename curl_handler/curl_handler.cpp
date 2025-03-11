@@ -1,25 +1,16 @@
 #include <curl_handler/curl_handler.hpp>
 
 curl::curl_handler::curl_handler(const std::string & user_agent, on_write_sign on_write):
-  __curl(curl_easy_init()),
   __user_agent(user_agent),
   __on_write(on_write),
   __is_debug(false)
-{
-  if (__curl == nullptr)
-  {
-    throw std::runtime_error("curl init failed!");
-  }
-}
+{}
 
 curl::curl_handler::curl_handler(curl_handler && rhs):
-  __curl(rhs.__curl),
   __user_agent(std::move(rhs.__user_agent)),
   __on_write(rhs.__on_write),
   __is_debug(rhs.__is_debug)
-{
-  rhs.__curl = nullptr;
-}
+{}
 
 curl::curl_handler &
 curl::curl_handler::operator=(curl_handler && rhs)
@@ -29,23 +20,16 @@ curl::curl_handler::operator=(curl_handler && rhs)
     return * this;
   }
 
-  __curl = rhs.__curl;
   __user_agent = std::move(rhs.__user_agent);
   __on_write = rhs.__on_write;
   __is_debug = rhs.__is_debug;
-
-  rhs.__curl = nullptr;
 
   return * this;
 }
 
 curl::curl_handler::~curl_handler()
 {
-  if (__curl)
-  {
-    curl_easy_cleanup(__curl);
-    curl_global_cleanup();
-  }
+  curl_global_cleanup();
 }
 
 void curl::curl_handler::set_debug_state(bool rhs)
