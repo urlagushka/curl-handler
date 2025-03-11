@@ -1,16 +1,35 @@
 # curl-handler
+## NOT READY | NEED TEST | MEMORY LEAKS
 async curl handler for cpp 20
+now works only with application/json - need rework
 
+## Supported methods
+#### Get
+```cpp
+// simple get
+auto answer = qq.get< nlohmann::json >("https://catfact.ninja/fact");
+std::cout << answer.dump(2) << std::endl;
 
-MacOS build:
-I have Apple clang 16, that doesn't support ```std::jthread```, if you have the same, you need install gcc through brew
+// async get
+auto answer = qq.async_get< nlohmann::json >("https://catfact.ninja/fact");
+std::cout << answer.get().dump(2) << std::endl;
+```
+
+#### Post
+```cpp
+// simple post
+auto answer = qq.post< nlohmann::json >("https://httpbin.org/post", {"post", "test"});
+std::cout << answer.dump(2) << std::endl;
+
+// async post
+auto answer = qq.async_post< nlohmann::json >("https://httpbin.org/post", {"async", "post", "test"});
+std::cout << answer.get().dump(2) << std::endl;
+```
+
+## Example build:
 ```sh
-brew install gcc
-gcc-14 --version
-```
-
-Compilation on MacOS using gcc:
-```
 mkdir build && cd build
-cmake -DCMAKE_C_COMPILER=/opt/homebrew/bin/gcc-14 -DCMAKE_CXX_COMPILER=/opt/homebrew/bin/g++-14 ..
+cmake ..
+make
+./curl_handler_example
 ```
