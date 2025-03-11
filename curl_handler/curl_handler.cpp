@@ -42,6 +42,7 @@ curl::curl_handler::operator=(curl_handler && rhs)
 curl::curl_handler::~curl_handler()
 {
   curl_easy_cleanup(__curl);
+  curl_global_cleanup();
 }
 
 void curl::curl_handler::set_debug_state(bool rhs)
