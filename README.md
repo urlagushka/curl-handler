@@ -27,6 +27,7 @@ auto answer = curlxx::METHOD< ANSWER_TYPE >(pm);
 // ANSWER_TYPE must be constructable from std::string
 // in other way, you can make a template specialization for from_string method
 // here is template specialization for nlohmann::json (built-in) (curlxx.hpp)
+
 template < >
 nlohmann::json
 from_string(std::string_view rhs)
