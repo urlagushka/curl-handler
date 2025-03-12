@@ -4,7 +4,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 find_package(CURL REQUIRED)
 
-add_library(curlxx handler.cpp utils.cpp)
+add_library(curlxx utils.cpp)
 
 target_include_directories(curlxx PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 

@@ -7,30 +7,49 @@ int main(int argc, char ** argv)
 {
   try
   {
-    curlxx::handler qq("firefox");
-    // qq.set_debug_state(true);
-
     // GET REQUEST
     {
-      auto answer = qq.get< nlohmann::json >("https://catfact.ninja/fact");
+      curlxx::params get_pm = {
+        .url = "https://catfact.ninja/fact",
+        .user_agent = "firefox"
+      };
+
+      auto answer = curlxx::get< nlohmann::json >(get_pm);
       std::cout << answer.dump(2) << std::endl;
     }
 
     // ASYNC GET REQUEST
     {
-      auto answer = qq.async_get< nlohmann::json >("https://catfact.ninja/fact");
+      curlxx::params async_get_pm = {
+        .url = "https://catfact.ninja/fact",
+        .user_agent = "firefox"
+      };
+
+      auto answer = curlxx::async_get< nlohmann::json >(async_get_pm);
       std::cout << answer.get().dump(2) << std::endl;
     }
 
     // POST REQUEST
     {
-      auto answer = qq.post< nlohmann::json >("https://httpbin.org/post", {"post", "test"});
+      curlxx::params post_pm = {
+        .url = "https://httpbin.org/post",
+        .query = nlohmann::json{"post", "test"},
+        .user_agent = "firefox"
+      };
+
+      auto answer = curlxx::post< nlohmann::json >(post_pm);
       std::cout << answer.dump(2) << std::endl;
     }
 
     // ASYNC POST REQUEST
     {
-      auto answer = qq.async_post< nlohmann::json >("https://httpbin.org/post", {"async", "post", "test"});
+      curlxx::params async_post_pm = {
+        .url = "https://httpbin.org/post",
+        .query = nlohmann::json{"async", "post", "test"},
+        .user_agent = "firefox"
+      };
+
+      auto answer = curlxx::async_post< nlohmann::json >(async_post_pm);
       std::cout << answer.get().dump(2) << std::endl;
     }
   }

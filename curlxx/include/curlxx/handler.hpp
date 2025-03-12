@@ -6,6 +6,7 @@
 #include <format>
 #include <future>
 #include <thread>
+#include <optional>
 #include <string_view>
 
 #include <curl/curl.h>
@@ -31,141 +32,149 @@ concept correct_answer_t = requires(answer_t answer, const std::string & rhs)
 
 namespace curlxx
 {
-  using url_t = std::string_view;
-  using query_t = nlohmann::json;
   using on_write_sign = std::size_t (*)(char * , std::size_t, std::size_t, std::string &);
 
-  class handler
+  struct params
   {
-    public:
-      handler(const std::string & user_agent, on_write_sign on_write = default_on_write);
-      handler(const handler & rhs) = default;
-      handler(handler && rhs) = default;
-      handler & operator=(const handler & rhs) = default;
-      handler & operator=(handler && rhs) = default;
-      ~handler();
+    std::optional< std::string > url;
+    std::optional< nlohmann::json > query;
+    std::optional< std::string > user_agent;
 
-      void set_debug_state(bool rhs);
-
-      template < correct_answer_t answer_t >
-      answer_t post(url_t url, const query_t & query);
-
-      template < correct_answer_t answer_t >
-      std::future< answer_t > async_post(url_t url, const query_t & query);
-
-      template < correct_answer_t answer_t >
-      answer_t get(url_t url);
-
-      template < correct_answer_t answer_t >
-      std::future< answer_t > async_get(url_t url);
-
-    private:
-      template < correct_answer_t answer_t >
-      answer_t string_to_answer(const std::string & rhs);
-
-      std::string __user_agent;
-      on_write_sign __on_write;
-      bool __is_debug;
+    std::optional< on_write_sign > on_write;
+    std::optional< bool > is_debug;
   };
+
+  template < correct_answer_t answer_t >
+  answer_t
+  post(const params & pm);
+
+  template < correct_answer_t answer_t >
+  std::future< answer_t >
+  async_post(const params & pm);
+
+  template < correct_answer_t answer_t >
+  answer_t
+  get(const params & pm);
+
+  template < correct_answer_t answer_t >
+  std::future< answer_t >
+  async_get(const params & pm);
 }
 
 template < correct_answer_t answer_t >
 answer_t
-curlxx::handler::post(url_t url, const query_t & query)
+curlxx::post(const params & pm)
 {
-  if (url.empty())
+  if (!pm.url.has_value())
   {
     throw std::runtime_error("url is null!");
   }
 
-  utils::curl_fd req;
+  utils::curl_fd curl_ex;
   std::string response;
-  std::string_view tmp = query.dump();
+  std::string user_agent;
 
-  if (__is_debug)
+  if (pm.is_debug)
   {
-    curl_easy_setopt(req.curl, CURLOPT_VERBOSE, 1L);
+    curl_easy_setopt(curl_ex.curl, CURLOPT_VERBOSE, 1L);
   }
-  curl_easy_setopt(req.curl, CURLOPT_URL, url.data());
-  curl_easy_setopt(req.curl, CURLOPT_POST, 1L);
-  curl_easy_setopt(req.curl, CURLOPT_POSTFIELDS, tmp.data());
-  curl_easy_setopt(req.curl, CURLOPT_POSTFIELDSIZE, static_cast< long >(tmp.size()));
+  curl_easy_setopt(curl_ex.curl, CURLOPT_URL, pm.url.value().c_str());
+  curl_easy_setopt(curl_ex.curl, CURLOPT_POST, 1L);
+  if (pm.query.has_value())
+  {
+    const char * tmp = pm.query.value().dump().c_str();
+    curl_easy_setopt(curl_ex.curl, CURLOPT_POSTFIELDS, tmp);
+    curl_easy_setopt(curl_ex.curl, CURLOPT_POSTFIELDSIZE, sizeof(tmp) / sizeof(char));
+  }
 
-  curl_easy_setopt(req.curl, CURLOPT_WRITEFUNCTION, __on_write);
-  curl_easy_setopt(req.curl, CURLOPT_WRITEDATA, &response);
+  if (pm.on_write.has_value())
+  {
+    curl_easy_setopt(curl_ex.curl, CURLOPT_WRITEFUNCTION, pm.on_write.value());
+  }
+  else
+  {
+    curl_easy_setopt(curl_ex.curl, CURLOPT_WRITEFUNCTION, default_on_write);
+  }
+  curl_easy_setopt(curl_ex.curl, CURLOPT_WRITEDATA, &response);
 
   utils::slist_fd headers;
-  std::string user_agent = std::format("User-Agent: {}", __user_agent);
   headers.append("Content-Type: application/json");
-  headers.append(user_agent.data());
-  curl_easy_setopt(req.curl, CURLOPT_HTTPHEADER, headers.slist);
+  if (pm.user_agent.has_value())
+  {
+    user_agent = std::format("User-Agent: {}", pm.user_agent.value());
+    headers.append(user_agent.c_str());
+  }
+  curl_easy_setopt(curl_ex.curl, CURLOPT_HTTPHEADER, headers.slist);
 
-  CURLcode code = curl_easy_perform(req.curl);
+  CURLcode code = curl_easy_perform(curl_ex.curl);
   if (code != CURLE_OK)
   {
-    throw std::runtime_error(std::format("POST {} ERROR\n{}", url, curl_easy_strerror(code)));
+    throw std::runtime_error(std::format("POST {} ERROR\n{}", pm.url.value(), curl_easy_strerror(code)));
   }
 
-  return string_to_answer< answer_t >(response);
+  return nlohmann::json::parse(response);
 }
 
 template < correct_answer_t answer_t >
 std::future< answer_t >
-curlxx::handler::async_post(url_t url, const query_t & query)
+curlxx::async_post(const params & pm)
 {
-  return std::async(std::launch::async, &handler::post< answer_t >, this, url, query);
+  return std::async(std::launch::async, &post< answer_t >, pm);
 }
 
 template < correct_answer_t answer_t >
 answer_t
-curlxx::handler::get(url_t url)
+curlxx::get(const params & pm)
 {
-  if (url.empty())
+  if (!pm.url.has_value())
   {
     throw std::runtime_error("url is null!");
   }
 
-  utils::curl_fd req;
+  utils::curl_fd curl_ex;
   std::string response;
+  std::string user_agent;
 
-  if (__is_debug)
+  if (pm.is_debug)
   {
-    curl_easy_setopt(req.curl, CURLOPT_VERBOSE, 1L);
+    curl_easy_setopt(curl_ex.curl, CURLOPT_VERBOSE, 1L);
   }
-  curl_easy_setopt(req.curl, CURLOPT_URL, url.data());
-  curl_easy_setopt(req.curl, CURLOPT_HTTPGET, 1L);
+  curl_easy_setopt(curl_ex.curl, CURLOPT_URL, pm.url.value().c_str());
+  curl_easy_setopt(curl_ex.curl, CURLOPT_HTTPGET, 1L);
 
-  curl_easy_setopt(req.curl, CURLOPT_WRITEFUNCTION, __on_write);
-  curl_easy_setopt(req.curl, CURLOPT_WRITEDATA, &response);
+  if (pm.on_write.has_value())
+  {
+    curl_easy_setopt(curl_ex.curl, CURLOPT_WRITEFUNCTION, pm.on_write.value());
+  }
+  else
+  {
+    curl_easy_setopt(curl_ex.curl, CURLOPT_WRITEFUNCTION, default_on_write);
+  }
+  curl_easy_setopt(curl_ex.curl, CURLOPT_WRITEDATA, &response);
 
   utils::slist_fd headers;
-  std::string user_agent = std::format("User-Agent: {}", __user_agent);
-  headers.append(user_agent.data());
-  curl_easy_setopt(req.curl, CURLOPT_HTTPHEADER, headers.slist);
+  headers.append("Content-Type: application/json");
+  if (pm.user_agent.has_value())
+  {
+    user_agent = std::format("User-Agent: {}", pm.user_agent.value());
+    headers.append(user_agent.c_str());
+  }
+  curl_easy_setopt(curl_ex.curl, CURLOPT_HTTPHEADER, headers.slist);
 
-  CURLcode code = curl_easy_perform(req.curl);
+  CURLcode code = curl_easy_perform(curl_ex.curl);
   if (code != CURLE_OK)
   {
-    throw std::runtime_error(std::format("GET {} ERROR\n{}", url, curl_easy_strerror(code)));
+    throw std::runtime_error(std::format("GET {} ERROR\n{}", pm.url.value(), curl_easy_strerror(code)));
   }
 
-  return string_to_answer< answer_t >(response);
+  return nlohmann::json::parse(response);
 }
 
 template < correct_answer_t answer_t >
 std::future< answer_t >
-curlxx::handler::async_get(url_t url)
+curlxx::async_get(const params & pm)
 {
-  return std::async(std::launch::async, &handler::get< answer_t >, this, url);
-}
-
-template < correct_answer_t answer_t >
-answer_t
-curlxx::handler::string_to_answer(const std::string & rhs)
-{
-  // need rework func
-  answer_t answer = nlohmann::json::parse(rhs);
-  return answer;
+  return std::async(std::launch::async, &get< answer_t >, pm);
 }
 
 #endif

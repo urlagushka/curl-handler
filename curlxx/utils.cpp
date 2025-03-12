@@ -13,7 +13,10 @@ curlxx::utils::curl_fd::curl_fd():
 
 curlxx::utils::curl_fd::~curl_fd()
 {
-  curl_easy_cleanup(curl);
+  if (curl)
+  {
+    curl_easy_cleanup(curl);
+  }
 }
 
 curlxx::utils::slist_fd::~slist_fd()
