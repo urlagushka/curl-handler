@@ -80,7 +80,7 @@ curlxx::handler::post(url_t url, const query_t & query)
 
   utils::curl_fd req;
   std::string response;
-  std::string tmp = query.dump();
+  std::string_view tmp = query.dump();
 
   if (__is_debug)
   {
@@ -88,15 +88,16 @@ curlxx::handler::post(url_t url, const query_t & query)
   }
   curl_easy_setopt(req.curl, CURLOPT_URL, url.data());
   curl_easy_setopt(req.curl, CURLOPT_POST, 1L);
-  curl_easy_setopt(req.curl, CURLOPT_POSTFIELDS, tmp.c_str());
+  curl_easy_setopt(req.curl, CURLOPT_POSTFIELDS, tmp.data());
   curl_easy_setopt(req.curl, CURLOPT_POSTFIELDSIZE, static_cast< long >(tmp.size()));
 
   curl_easy_setopt(req.curl, CURLOPT_WRITEFUNCTION, __on_write);
   curl_easy_setopt(req.curl, CURLOPT_WRITEDATA, &response);
 
   utils::slist_fd headers;
+  std::string user_agent = std::format("User-Agent: {}", __user_agent);
   headers.append("Content-Type: application/json");
-  headers.append(std::format("User-Agent: {}", __user_agent).c_str());
+  headers.append(user_agent.data());
   curl_easy_setopt(req.curl, CURLOPT_HTTPHEADER, headers.slist);
 
   CURLcode code = curl_easy_perform(req.curl);
@@ -138,7 +139,8 @@ curlxx::handler::get(url_t url)
   curl_easy_setopt(req.curl, CURLOPT_WRITEDATA, &response);
 
   utils::slist_fd headers;
-  headers.append(std::format("User-Agent: {}", __user_agent).c_str());
+  std::string user_agent = std::format("User-Agent: {}", __user_agent);
+  headers.append(user_agent.data());
   curl_easy_setopt(req.curl, CURLOPT_HTTPHEADER, headers.slist);
 
   CURLcode code = curl_easy_perform(req.curl);
