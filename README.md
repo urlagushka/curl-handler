@@ -2,7 +2,7 @@
 Async cURL for C++20
 | Method | Status | Content-Type (request) |
 | --- | --- | --- |
-| GET | Testing | json |
+| GET | Testing | not need |
 | POST | Testing | json |
 | PUT | - | - |
 | DELETE | - | - |
