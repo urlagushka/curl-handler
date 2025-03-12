@@ -4,6 +4,16 @@ async curl handler for cpp 20
 #### now works only with application/json - need rework
 
 ## Supported methods
+#### Request params
+```cpp
+curlxx::params pm = {
+  .url = std::string, // required param
+  .query = nlohmann::json{} // optional param | post request only
+  .user_agent = std::string, // optional param
+  .on_write = curlxx::on_write_sign *, // optional param | by default used default_on_write
+  .is_debug = bool // optional param | by default is false
+};
+```
 #### Get
 ```cpp
 // simple get
