@@ -5,14 +5,14 @@
 
 int main(int argc, char ** argv)
 {
-  curl_global_init(CURL_GLOBAL_DEFAULT);
   try
   {
     // GET REQUEST
     {
       curlxx::params get_pm = {
         .url = "https://catfact.ninja/fact",
-        .user_agent = "firefox"
+        .user_agent = "firefox",
+        .is_debug = false
       };
 
       auto answer = curlxx::get< nlohmann::json >(get_pm);
@@ -59,6 +59,5 @@ int main(int argc, char ** argv)
   {
     std::cout << error.what() << std::endl;
   }
-  curl_global_cleanup();
   return 0;
 }

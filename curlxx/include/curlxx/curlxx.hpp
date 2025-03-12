@@ -70,7 +70,7 @@ curlxx::post(const params & pm)
 
   curl_easy_setopt(curl_ex.curl, CURLOPT_SSL_VERIFYPEER, 1L);
   curl_easy_setopt(curl_ex.curl, CURLOPT_SSL_VERIFYHOST, 2L);
-  if (pm.is_debug)
+  if (pm.is_debug.has_value() && pm.is_debug.value())
   {
     curl_easy_setopt(curl_ex.curl, CURLOPT_VERBOSE, 1L);
   }
@@ -125,7 +125,7 @@ curlxx::get(const params & pm)
 
   curl_easy_setopt(curl_ex.curl, CURLOPT_SSL_VERIFYPEER, 1L);
   curl_easy_setopt(curl_ex.curl, CURLOPT_SSL_VERIFYHOST, 2L);
-  if (pm.is_debug)
+  if (pm.is_debug.has_value() && pm.is_debug.value())
   {
     curl_easy_setopt(curl_ex.curl, CURLOPT_VERBOSE, 1L);
   }
