@@ -149,7 +149,6 @@ curlxx::get(const params & pm)
   curl_easy_setopt(curl_ex.curl, CURLOPT_WRITEFUNCTION, (pm.on_write.has_value()) ? pm.on_write.value() : default_on_write);
   curl_easy_setopt(curl_ex.curl, CURLOPT_WRITEDATA, &response);
 
-  headers.append("Content-Type: application/json");
   if (pm.user_agent.has_value())
   {
     user_agent = std::format("User-Agent: {}", pm.user_agent.value());

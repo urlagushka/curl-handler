@@ -1,6 +1,6 @@
 # curlxx
 Async cURL for C++20
-| Method | Status | Application/Type |
+| Method | Status | Content-Type (request) |
 | --- | --- | --- |
 | GET | Testing | json |
 | POST | Testing | json |
