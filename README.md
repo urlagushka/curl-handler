@@ -31,5 +31,5 @@ std::cout << answer.get().dump(2) << std::endl;
 mkdir build && cd build
 cmake ..
 make
-./curl_handler_example
+./curlxx_example
 ```
