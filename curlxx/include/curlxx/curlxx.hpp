@@ -68,6 +68,10 @@ curlxx::post(const params & pm)
   std::string user_agent;
   std::string query_dump;
 
+  #if defined(__APPLE__)
+    curl_easy_setopt(curl_ex.curl, CURLOPT_FORBID_REUSE, 1L);
+  #endif
+
   curl_easy_setopt(curl_ex.curl, CURLOPT_SSL_VERIFYPEER, 1L);
   curl_easy_setopt(curl_ex.curl, CURLOPT_SSL_VERIFYHOST, 2L);
   if (pm.is_debug.has_value() && pm.is_debug.value())
@@ -122,6 +126,10 @@ curlxx::get(const params & pm)
   utils::slist_fd headers;
   std::string response;
   std::string user_agent;
+
+  #if defined(__APPLE__)
+    curl_easy_setopt(curl_ex.curl, CURLOPT_FORBID_REUSE, 1L);
+  #endif
 
   curl_easy_setopt(curl_ex.curl, CURLOPT_SSL_VERIFYPEER, 1L);
   curl_easy_setopt(curl_ex.curl, CURLOPT_SSL_VERIFYHOST, 2L);

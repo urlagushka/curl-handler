@@ -58,10 +58,12 @@ auto answer = curlxx::async_post< nlohmann::json >(async_post_pm);
 std::cout << answer.get().dump(2) << std::endl;
 ```
 
-## Example build:
+## Example build Linux (required OpenSSl in CURL):
 ```sh
 mkdir build && cd build
 cmake ..
 make
 ./curlxx_example
 ```
+
+## Example build MacOS ()
