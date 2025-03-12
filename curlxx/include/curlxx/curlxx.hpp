@@ -22,12 +22,6 @@ namespace
   }
 }
 
-template < typename answer_t >
-concept correct_answer_t = requires(answer_t answer, const std::string & rhs)
-{
-  { answer = rhs } -> std::same_as< answer_t & >;
-};
-
 namespace curlxx
 {
   using on_write_sign = std::size_t (*)(char * , std::size_t, std::size_t, std::string &);
@@ -42,24 +36,24 @@ namespace curlxx
     std::optional< bool > is_debug;
   };
 
-  template < correct_answer_t answer_t >
+  template < typename answer_t >
   answer_t
   post(const params & pm);
 
-  template < correct_answer_t answer_t >
+  template < typename answer_t >
   std::future< answer_t >
   async_post(const params & pm);
 
-  template < correct_answer_t answer_t >
+  template < typename answer_t >
   answer_t
   get(const params & pm);
 
-  template < correct_answer_t answer_t >
+  template < typename answer_t >
   std::future< answer_t >
   async_get(const params & pm);
 }
 
-template < correct_answer_t answer_t >
+template < typename answer_t >
 answer_t
 curlxx::post(const params & pm)
 {
@@ -106,14 +100,14 @@ curlxx::post(const params & pm)
   return nlohmann::json::parse(response);
 }
 
-template < correct_answer_t answer_t >
+template < typename answer_t >
 std::future< answer_t >
 curlxx::async_post(const params & pm)
 {
   return std::async(std::launch::async, &post< answer_t >, std::cref(pm));
 }
 
-template < correct_answer_t answer_t >
+template < typename answer_t >
 answer_t
 curlxx::get(const params & pm)
 {
@@ -153,7 +147,7 @@ curlxx::get(const params & pm)
   return nlohmann::json::parse(response);
 }
 
-template < correct_answer_t answer_t >
+template < typename answer_t >
 std::future< answer_t >
 curlxx::async_get(const params & pm)
 {
