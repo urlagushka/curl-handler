@@ -6,6 +6,7 @@
 #include <future>
 #include <thread>
 #include <optional>
+#include <string_view>
 
 #include <curl/curl.h>
 
@@ -19,6 +20,20 @@ namespace
   {
     userdata.append(ptr, size * nmemb);
     return size * nmemb;
+  }
+
+  template < typename answer_t >
+  answer_t
+  from_string(std::string_view rhs)
+  {
+    return answer_t(rhs);
+  }
+
+  template < >
+  nlohmann::json
+  from_string(std::string_view rhs)
+  {
+    return nlohmann::json::parse(rhs);
   }
 }
 
@@ -99,7 +114,7 @@ curlxx::post(const params & pm)
     throw std::runtime_error(curl_easy_strerror(code));
   }
 
-  return nlohmann::json::parse(response);
+  return from_string< answer_t >(response);
 }
 
 template < typename answer_t >
@@ -148,7 +163,7 @@ curlxx::get(const params & pm)
     throw std::runtime_error(curl_easy_strerror(code));
   }
 
-  return nlohmann::json::parse(response);
+  return from_string< answer_t >(response);
 }
 
 template < typename answer_t >

@@ -15,8 +15,8 @@ int main(int argc, char ** argv)
         .is_debug = false
       };
 
-      auto answer = curlxx::get< nlohmann::json >(get_pm);
-      std::cout << answer.dump(2) << std::endl;
+      auto answer = curlxx::get< std::string >(get_pm);
+      std::cout << answer << std::endl;
     }
     // ASYNC GET REQUEST
     {
