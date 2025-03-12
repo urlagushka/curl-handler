@@ -1,5 +1,5 @@
 # curlxx
-## NOT READY | NEED TEST | MEMORY LEAKS
+## NOT READY | NEED TEST | MEMORY LEAKS (MACOS ONLY, LINUX OK)
 async curl handler for cpp 20
 #### now works only with application/json - need rework
 
