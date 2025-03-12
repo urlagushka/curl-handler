@@ -119,7 +119,7 @@ template < correct_answer_t answer_t >
 std::future< answer_t >
 curlxx::async_post(const params & pm)
 {
-  return std::async(std::launch::async, &post< answer_t >, pm);
+  return std::async(std::launch::async, &post< answer_t >, std::cref(pm));
 }
 
 template < correct_answer_t answer_t >
@@ -174,7 +174,7 @@ template < correct_answer_t answer_t >
 std::future< answer_t >
 curlxx::async_get(const params & pm)
 {
-  return std::async(std::launch::async, &get< answer_t >, pm);
+  return std::async(std::launch::async, &get< answer_t >, std::cref(pm));
 }
 
 #endif
