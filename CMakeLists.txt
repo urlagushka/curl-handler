@@ -1,14 +1,16 @@
-cmake_minimum_required(VERSION 3.10)
-project(curlxx_example)
-
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-set(SOURCES example.cpp)
+if (APPLE)
+  set(CURL_INCLUDE_DIR /opt/homebrew/opt/curl/include)
+  set(CURL_LIBRARY /opt/homebrew/opt/curl/lib/libcurl.dylib)
+endif()
 
-add_subdirectory(curlxx)
+find_package(CURL REQUIRED)
 
-add_executable(${PROJECT_NAME} ${SOURCES})
+add_library(curlxx utils.cpp)
 
-target_link_libraries(${PROJECT_NAME} curlxx)
+target_include_directories(curlxx PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include ${CURL_INCLUDE_DIR})
+
+target_link_libraries(curlxx PRIVATE CURL::libcurl)
