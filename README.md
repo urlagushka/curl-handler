@@ -1,5 +1,5 @@
 # curlxx
-## NOT READY | NEED TEST | MEMORY LEAKS (MACOS ONLY, LINUX OK)
+## NOT READY | NEED TEST
 async curl handler for cpp 20
 #### now works only with application/json - need rework
 
@@ -66,4 +66,15 @@ make
 ./curlxx_example
 ```
 
-## Example build MacOS ()
+## Example build MacOS (required OpenSSL in CURL)
+```sh
+brew uninstall curl
+brew install curl-openssl
+
+export LDFLAGS="-L/opt/homebrew/opt/curl/lib"
+export CPPFLAGS="-I/opt/homebrew/opt/curl/include"
+mkdir build && cd build
+cmake ..
+make
+./curlxx_example
+```
