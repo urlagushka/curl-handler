@@ -1,6 +1,5 @@
 # curlxx
-## NOT READY | NEED TEST
-async curl handler for cpp 20
+Async cURL for C++20
 | Method | Status | Application/Type |
 | --- | --- | --- |
 | GET | Testing | json |
