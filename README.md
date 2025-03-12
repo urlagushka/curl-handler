@@ -1,6 +1,13 @@
 # curlxx
 ## NOT READY | NEED TEST
 async curl handler for cpp 20
+| Method | Status |
+| --- | --- |
+| GET | Testing |
+| POST | Testing |
+| PUT | - |
+| DELETE | - |
+| PATCH | - |
 #### now works only with application/json - need rework
 
 ## Supported methods
