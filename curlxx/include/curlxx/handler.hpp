@@ -8,6 +8,7 @@
 #include <thread>
 #include <optional>
 #include <string_view>
+#include <iostream>
 
 #include <curl/curl.h>
 
@@ -73,6 +74,7 @@ curlxx::post(const params & pm)
   utils::curl_fd curl_ex;
   std::string response;
   std::string user_agent;
+  std::string query_dump;
 
   if (pm.is_debug)
   {
@@ -82,9 +84,9 @@ curlxx::post(const params & pm)
   curl_easy_setopt(curl_ex.curl, CURLOPT_POST, 1L);
   if (pm.query.has_value())
   {
-    const char * tmp = pm.query.value().dump().c_str();
-    curl_easy_setopt(curl_ex.curl, CURLOPT_POSTFIELDS, tmp);
-    curl_easy_setopt(curl_ex.curl, CURLOPT_POSTFIELDSIZE, sizeof(tmp) / sizeof(char));
+    query_dump = pm.query.value().dump();
+    curl_easy_setopt(curl_ex.curl, CURLOPT_POSTFIELDS, query_dump.c_str());
+    curl_easy_setopt(curl_ex.curl, CURLOPT_POSTFIELDSIZE, query_dump.size());
   }
 
   if (pm.on_write.has_value())
@@ -132,6 +134,7 @@ curlxx::get(const params & pm)
   }
 
   utils::curl_fd curl_ex;
+  utils::slist_fd headers;
   std::string response;
   std::string user_agent;
 
@@ -152,7 +155,6 @@ curlxx::get(const params & pm)
   }
   curl_easy_setopt(curl_ex.curl, CURLOPT_WRITEDATA, &response);
 
-  utils::slist_fd headers;
   headers.append("Content-Type: application/json");
   if (pm.user_agent.has_value())
   {
