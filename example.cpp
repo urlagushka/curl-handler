@@ -1,10 +1,11 @@
 #include <iostream>
 
-#include <curlxx/handler.hpp>
+#include <curlxx/curlxx.hpp>
 #include <curlxx/json.hpp>
 
 int main(int argc, char ** argv)
 {
+  curl_global_init(CURL_GLOBAL_DEFAULT);
   try
   {
     // GET REQUEST
@@ -58,5 +59,6 @@ int main(int argc, char ** argv)
   {
     std::cout << error.what() << std::endl;
   }
+  curl_global_cleanup();
   return 0;
 }

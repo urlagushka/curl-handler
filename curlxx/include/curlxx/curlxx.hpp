@@ -68,6 +68,8 @@ curlxx::post(const params & pm)
   std::string user_agent;
   std::string query_dump;
 
+  curl_easy_setopt(curl_ex.curl, CURLOPT_SSL_VERIFYPEER, 1L);
+  curl_easy_setopt(curl_ex.curl, CURLOPT_SSL_VERIFYHOST, 2L);
   if (pm.is_debug)
   {
     curl_easy_setopt(curl_ex.curl, CURLOPT_VERBOSE, 1L);
@@ -121,6 +123,8 @@ curlxx::get(const params & pm)
   std::string response;
   std::string user_agent;
 
+  curl_easy_setopt(curl_ex.curl, CURLOPT_SSL_VERIFYPEER, 1L);
+  curl_easy_setopt(curl_ex.curl, CURLOPT_SSL_VERIFYHOST, 2L);
   if (pm.is_debug)
   {
     curl_easy_setopt(curl_ex.curl, CURLOPT_VERBOSE, 1L);
