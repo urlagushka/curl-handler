@@ -1,14 +1,11 @@
-#ifndef HANDLER_HPP
-#define HANDLER_HPP
+#ifndef CURLXX_HPP
+#define CURLXX_HPP
 
 #include <string>
-#include <utility>
 #include <format>
 #include <future>
 #include <thread>
 #include <optional>
-#include <string_view>
-#include <iostream>
 
 #include <curl/curl.h>
 
@@ -17,7 +14,7 @@
 
 namespace
 {
-  static std::size_t
+  inline std::size_t
   default_on_write(char * ptr, std::size_t size, std::size_t nmemb, std::string & userdata)
   {
     userdata.append(ptr, size * nmemb);
@@ -37,7 +34,7 @@ namespace curlxx
 
   struct params
   {
-    std::optional< std::string > url;
+    std::string url;
     std::optional< nlohmann::json > query;
     std::optional< std::string > user_agent;
 
@@ -66,12 +63,13 @@ template < correct_answer_t answer_t >
 answer_t
 curlxx::post(const params & pm)
 {
-  if (!pm.url.has_value())
+  if (pm.url.empty())
   {
     throw std::runtime_error("url is null!");
   }
 
   utils::curl_fd curl_ex;
+  utils::slist_fd headers;
   std::string response;
   std::string user_agent;
   std::string query_dump;
@@ -80,7 +78,7 @@ curlxx::post(const params & pm)
   {
     curl_easy_setopt(curl_ex.curl, CURLOPT_VERBOSE, 1L);
   }
-  curl_easy_setopt(curl_ex.curl, CURLOPT_URL, pm.url.value().c_str());
+  curl_easy_setopt(curl_ex.curl, CURLOPT_URL, pm.url.c_str());
   curl_easy_setopt(curl_ex.curl, CURLOPT_POST, 1L);
   if (pm.query.has_value())
   {
@@ -88,18 +86,9 @@ curlxx::post(const params & pm)
     curl_easy_setopt(curl_ex.curl, CURLOPT_POSTFIELDS, query_dump.c_str());
     curl_easy_setopt(curl_ex.curl, CURLOPT_POSTFIELDSIZE, query_dump.size());
   }
-
-  if (pm.on_write.has_value())
-  {
-    curl_easy_setopt(curl_ex.curl, CURLOPT_WRITEFUNCTION, pm.on_write.value());
-  }
-  else
-  {
-    curl_easy_setopt(curl_ex.curl, CURLOPT_WRITEFUNCTION, default_on_write);
-  }
+  curl_easy_setopt(curl_ex.curl, CURLOPT_WRITEFUNCTION, (pm.on_write.has_value()) ? pm.on_write.value() : default_on_write);
   curl_easy_setopt(curl_ex.curl, CURLOPT_WRITEDATA, &response);
 
-  utils::slist_fd headers;
   headers.append("Content-Type: application/json");
   if (pm.user_agent.has_value())
   {
@@ -111,7 +100,7 @@ curlxx::post(const params & pm)
   CURLcode code = curl_easy_perform(curl_ex.curl);
   if (code != CURLE_OK)
   {
-    throw std::runtime_error(std::format("POST {} ERROR\n{}", pm.url.value(), curl_easy_strerror(code)));
+    throw std::runtime_error(curl_easy_strerror(code));
   }
 
   return nlohmann::json::parse(response);
@@ -128,7 +117,7 @@ template < correct_answer_t answer_t >
 answer_t
 curlxx::get(const params & pm)
 {
-  if (!pm.url.has_value())
+  if (pm.url.empty())
   {
     throw std::runtime_error("url is null!");
   }
@@ -142,17 +131,9 @@ curlxx::get(const params & pm)
   {
     curl_easy_setopt(curl_ex.curl, CURLOPT_VERBOSE, 1L);
   }
-  curl_easy_setopt(curl_ex.curl, CURLOPT_URL, pm.url.value().c_str());
+  curl_easy_setopt(curl_ex.curl, CURLOPT_URL, pm.url.c_str());
   curl_easy_setopt(curl_ex.curl, CURLOPT_HTTPGET, 1L);
-
-  if (pm.on_write.has_value())
-  {
-    curl_easy_setopt(curl_ex.curl, CURLOPT_WRITEFUNCTION, pm.on_write.value());
-  }
-  else
-  {
-    curl_easy_setopt(curl_ex.curl, CURLOPT_WRITEFUNCTION, default_on_write);
-  }
+  curl_easy_setopt(curl_ex.curl, CURLOPT_WRITEFUNCTION, (pm.on_write.has_value()) ? pm.on_write.value() : default_on_write);
   curl_easy_setopt(curl_ex.curl, CURLOPT_WRITEDATA, &response);
 
   headers.append("Content-Type: application/json");
@@ -166,7 +147,7 @@ curlxx::get(const params & pm)
   CURLcode code = curl_easy_perform(curl_ex.curl);
   if (code != CURLE_OK)
   {
-    throw std::runtime_error(std::format("GET {} ERROR\n{}", pm.url.value(), curl_easy_strerror(code)));
+    throw std::runtime_error(curl_easy_strerror(code));
   }
 
   return nlohmann::json::parse(response);
